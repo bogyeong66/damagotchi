@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 손안의 다마고치</title>
+    <style>
+        /* CSS: 게임의 디자인을 담당합니다 */
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+            background-color: #ffefd5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .game-card {
+            background: white;
+            border: 8px solid #ff9f43;
+            border-radius: 50px;
+            padding: 30px;
+            width: 320px;
+            box-shadow: 0 10px 0 #ee5253;
+            text-align: center;
+        }
+
+        #pet {
+            font-size: 100px;
+            margin: 20px 0;
+            display: block;
+            transition: transform 0.2s;
+        }
+
+        .stats-container {
+            background: #f1f2f6;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 150px;
+            height: 15px;
+            background: #dfe4ea;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 100%;
+            background: #2ed573;
+            transition: width 0.3s;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 15px;
+            background: #ff9f43;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #e67e22;
+        }
+
+        button:active {
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        #msg {
+            margin-top: 15px;
+            color: #57606f;
+            font-style: italic;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-card">
+    <h2 style="margin-top:0; color:#ff9f43;">TAMAGOTCHI</h2>
+    
+    <div id="pet">🐣</div>
+
+    <div class="stats-container">
+        <div class="stat-row">
+            <span>배부름</span>
+            <div class="progress-bar"><div id="hunger-bar" class="progress-fill"></div></div>
+        </div>
+        <div class="stat-row">
+            <span>행복도</span>
+            <div class="progress-bar"><div id="happy-bar" class="progress-fill" style="background:#1e90ff;"></div></div>
+        </div>
+    </div>
+
+    <div class="buttons">
+        <button onclick="action('feed')">🍎 밥주기</button>
+        <button onclick="action('play')">🧸 놀아주기</button>
+        <button onclick="action('sleep')">💤 잠자기</button>
+        <button onclick="location.reload()" id="restart" style="display:none; background:#ff4757; box-shadow: 0 4px 0 #c0392b;">다시 시작</button>
+    </div>
+
+    <p id="msg">나를 잘 보살펴줘!</p>
+</div>
+
+<script>
+    /* JavaScript: 게임의 규칙과 로직을 담당합니다 */
+    let hunger = 100;
+    let happiness = 100;
+    let age = 0;
+    let isDead = false;
+
+    // 상태 바 및 이모지 요소 가져오기
+    const hungerBar = document.getElementById('hunger-bar');
+    const happyBar = document.getElementById('happy-bar');
+    const pet = document.getElementById('pet');
+    const msg = document.getElementById('msg');
+    const restartBtn = document.getElementById('restart');
+
+    // 2초마다 상태 감소
+    const loop = setInterval(() => {
+        if (!isDead) {
+            hunger -= 4;
+            happiness -= 3;
+            age += 1;
+            updateUI();
+            checkGameOver();
+        }
+    }, 2000);
+
+    function updateUI() {
+        hungerBar.style.width = hunger + "%";
+        happyBar.style.width = happiness + "%";
+
+        // 상태에 따른 표정 변화
+        if (hunger < 30 || happiness < 30) {
+            pet.innerText = "😭";
+            msg.innerText = "상태가 안 좋아요...";
+        } else if (age > 50) {
+            pet.innerText = "🐓"; // 어느 정도 크면 닭으로 성장
+            msg.innerText = "다 컸어요!";
+        } else {
+            pet.innerText = "🐥";
+            msg.innerText = "기분이 아주 좋아요!";
+        }
+    }
+
+    function action(type) {
+        if (isDead) return;
+
+        if (type === 'feed') {
+            hunger = Math.min(hunger + 20, 100);
+            msg.innerText = "맛있어! 냠냠!";
+            animatePet('scale(1.2)');
+        } else if (type === 'play') {
+            happiness = Math.min(happiness + 20, 100);
+            msg.innerText = "신난다! 하하하!";
+            animatePet('rotate(20deg)');
+        } else if (type === 'sleep') {
+            hunger = Math.max(hunger - 10, 0);
+            happiness = Math.min(happiness + 30, 100);
+            msg.innerText = "쿨쿨... 잘 잤다!";
+            pet.innerText = "😴";
+        }
+        updateUI();
+    }
+
+    function animatePet(transformValue) {
+        pet.style.transform = transformValue;
+        setTimeout(() => pet.style.transform = 'scale(1)', 300);
+    }
+
+    function checkGameOver() {
+        if (hunger <= 0 || happiness <= 0) {
+            isDead = true;
+            clearInterval(loop);
+            pet.innerText = "👻";
+            msg.innerText = "하늘나라로 떠났습니다...";
+            hungerBar.style.width = "0%";
+            happyBar.style.width = "0%";
+            
+            // 일반 버튼 숨기고 재시작 버튼 보이기
+            document.querySelectorAll('.buttons button').forEach(btn => btn.style.display = 'none');
+            restartBtn.style.display = 'block';
+        }
+    }
+</script>
+
+</body>
+</html>
